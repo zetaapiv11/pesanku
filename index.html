@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Untuk Kamu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Quicksand:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#07050d;
+    --bg-plum:#1c0f2e;
+    --bg-wine:#3a1638;
+    --bg-mid:#2a1240;
+    --accent:#e6a8c4;
+    --accent-deep:#a8477a;
+    --accent-glow:rgba(230,168,196,.35);
+    --text-main:#f3e8ef;
+    --text-soft:#c7b3cf;
+    --text-faint:#8d7a97;
+    --serif:'Cormorant Garamond', Georgia, serif;
+    --sans:'Quicksand', 'Segoe UI', sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: linear-gradient(180deg,#050308 0%, #120a1e 18%, #1c0f2e 40%, #2a1240 62%, #3a1638 80%, #14081c 100%);
+    color:var(--text-main);
+    font-family:var(--sans);
+    overflow-x:hidden;
+    min-height:100vh;
+    position:relative;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important;}
+  }
+
+  a, button{font-family:inherit;}
+  button{cursor:pointer; border:none; background:none; color:inherit;}
+  button:focus-visible, .whisper-card:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:4px;
+  }
+
+  ::selection{background:var(--accent-deep); color:#fff;}
+
+  /* ---------- ambient light glows ---------- */
+  .glow{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(90px);
+    opacity:.35;
+    pointer-events:none;
+    z-index:0;
+  }
+  .glow-1{ width:60vw; height:60vw; top:-20vw; left:-15vw; background:var(--accent-deep);}
+  .glow-2{ width:50vw; height:50vw; bottom:5vw; right:-15vw; background:#5a2a86;}
+  .glow-3{ width:40vw; height:40vw; top:45vh; left:30vw; background:#7a3060; opacity:.2;}
+
+  /* ---------- particle layers ---------- */
+  #stars-layer, #petals-layer, #hearts-layer{
+    position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden;
+  }
+  .star{
+    position:absolute; width:2px; height:2px; background:#fff; border-radius:50%;
+    opacity:.7; animation:twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:.15; transform:scale(1);}
+    50%{opacity:.9; transform:scale(1.6);}
+  }
+  .petal{
+    position:absolute; top:-5vh; font-size:14px; opacity:.85; color:var(--accent);
+    animation-name:fall; animation-timing-function:linear; animation-fill-mode:forwards; user-select:none;
+  }
+  @keyframes fall{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:.9;}
+    100%{ transform:translate(var(--drift), 115vh) rotate(360deg); opacity:0;}
+  }
+  .tiny-heart{
+    position:absolute; bottom:-4vh; color:var(--accent); font-size:16px; opacity:0;
+    animation-name:floatUp; animation-timing-function:ease-out; animation-fill-mode:forwards;
+  }
+  @keyframes floatUp{
+    0%{ transform:translateY(0) scale(.6); opacity:0;}
+    12%{ opacity:.9;}
+    100%{ transform:translateY(-70vh) scale(1.1); opacity:0;}
+  }
+
+  /* ---------- loading screen ---------- */
+  #loading-screen{
+    position:fixed; inset:0; z-index:100;
+    background:var(--bg-void);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:18px;
+    transition:opacity 1s ease, visibility 1s ease;
+  }
+  #loading-screen.hide{ opacity:0; visibility:hidden; pointer-events:none;}
+  .beating-heart{
+    width:46px; height:46px; position:relative; animation:beat 1.1s ease-in-out infinite;
+  }
+  .beating-heart::before, .beating-heart::after{
+    content:''; position:absolute; width:26px; height:40px; background:var(--accent-deep);
+    border-radius:26px 26px 0 0; top:0;
+  }
+  .beating-heart::before{ left:23px; transform:rotate(-45deg); transform-origin:0 100%;}
+  .beating-heart::after{ left:0; transform:rotate(45deg); transform-origin:100% 100%;}
+  @keyframes beat{ 0%,100%{transform:scale(1);} 25%{transform:scale(1.12);} 40%{transform:scale(.95);} }
+  #loading-screen p{ color:var(--text-faint); font-size:.85rem; letter-spacing:.05em;}
+
+  /* ---------- progress bar ---------- */
+  #progress-bar{
+    position:fixed; top:0; left:0; height:3px; width:0%;
+    background:linear-gradient(90deg, var(--accent-deep), var(--accent));
+    z-index:60; transition:width .1s linear;
+    box-shadow:0 0 8px var(--accent-glow);
+  }
+
+  /* ---------- music player ---------- */
+  #music-player{
+    position:fixed; bottom:18px; right:18px; z-index:50;
+    background:rgba(20,10,28,.65); backdrop-filter:blur(10px);
+    border:1px solid rgba(230,168,196,.2);
+    border-radius:30px; padding:8px 14px; display:flex; align-items:center; gap:10px;
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  #music-player.hidden-player{ opacity:0; pointer-events:none; transform:translateY(10px);}
+  #music-player button{ font-size:1.1rem; color:var(--accent); display:flex;}
+  #music-player input[type=range]{ width:60px; accent-color:var(--accent-deep);}
+
+  /* ---------- generic section layout ---------- */
+  section{
+    position:relative; z-index:2;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:12vh 7vw;
+    text-align:center;
+  }
+  .eyebrow-space{ height:0;} /* intentionally no label chrome */
+
+  .reveal{ opacity:0; transform:translateY(22px); transition:opacity 1s ease, transform 1s ease;}
+  .reveal.visible{ opacity:1; transform:translateY(0);}
+
+  h1, h2{ font-family:var(--serif); font-weight:400; line-height:1.25;}
+  p{ font-family:var(--serif); line-height:1.85; color:var(--text-soft);}
+
+  /* ---------- opening ---------- */
+  #opening{ position:relative; overflow:hidden; }
+  #opening-roses{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:1; }
+  #opening h1, #opening #open-btn{ position:relative; z-index:2; }
+  .big-rose{
+    position:absolute; top:-14vh; opacity:.95; user-select:none;
+    animation-name:bigRoseFall; animation-timing-function:ease-in; animation-fill-mode:forwards;
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  }
+  @keyframes bigRoseFall{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:.95;}
+    100%{ transform:translate(var(--drift), 130vh) rotate(300deg); opacity:0;}
+  }
+  #opening h1{
+    font-size:clamp(1.6rem, 5vw, 2.6rem);
+    font-style:italic; color:var(--text-main);
+    max-width:480px;
+  }
+  #open-btn{
+    margin-top:48px;
+    font-family:var(--sans); font-size:.95rem; letter-spacing:.03em;
+    color:var(--bg-void); background:linear-gradient(120deg, var(--accent), var(--accent-deep));
+    padding:14px 34px; border-radius:40px;
+    box-shadow:0 0 30px var(--accent-glow);
+    transition:transform .35s ease, box-shadow .35s ease;
+  }
+  #open-btn:hover{ transform:translateY(-3px) scale(1.03); box-shadow:0 0 45px var(--accent-glow);}
+
+  /* ---------- letter sections ---------- */
+  .letter-section p{
+    max-width:520px; font-size:clamp(1.05rem, 2.6vw, 1.35rem);
+    white-space:pre-line;
+  }
+  .typing-caret{
+    display:inline-block; width:1px; height:1.1em; background:var(--accent);
+    margin-left:2px; vertical-align:middle; animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0;} }
+
+  /* section 3 - envelope opening feel */
+  #section3{ perspective:1200px; }
+  #section3 .envelope{
+    max-width:540px; width:100%;
+    background:linear-gradient(160deg, rgba(58,22,56,.55), rgba(20,10,28,.55));
+    border:1px solid rgba(230,168,196,.18);
+    border-radius:6px;
+    padding:44px 34px;
+    transform-origin:top center;
+    transform:rotateX(-35deg);
+    opacity:0;
+    transition:transform 1.4s cubic-bezier(.2,.7,.2,1), opacity 1.4s ease;
+    box-shadow:0 30px 60px rgba(0,0,0,.4);
+  }
+  #section3 .envelope.visible{ transform:rotateX(0deg); opacity:1;}
+  #section3 p{ margin:0 auto; max-width:none;}
+
+  /* ---------- whisper cards ---------- */
+  .whisper-grid{
+    display:flex; flex-direction:column; gap:14px; max-width:480px; width:100%;
+  }
+  .whisper-card{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(230,168,196,.16);
+    border-radius:14px; padding:18px 22px;
+    font-family:var(--serif); font-style:italic; font-size:1.05rem;
+    color:var(--text-main); text-align:left;
+    transition:background .3s ease, transform .3s ease, border-color .3s ease;
+  }
+  .whisper-card:hover, .whisper-card:focus-visible{
+    background:rgba(230,168,196,.08); transform:translateX(4px); border-color:var(--accent);
+  }
+
+  .modal{
+    position:fixed; inset:0; background:rgba(4,2,8,.92); z-index:80;
+    display:flex; align-items:center; justify-content:center; padding:8vw;
+    opacity:0; visibility:hidden; transition:opacity .45s ease, visibility .45s ease;
+  }
+  .modal.open{ opacity:1; visibility:visible;}
+  .modal-box{
+    max-width:460px; background:linear-gradient(160deg, rgba(58,22,56,.7), rgba(14,8,20,.85));
+    border:1px solid rgba(230,168,196,.2); border-radius:16px; padding:36px 30px;
+    position:relative;
+  }
+  .modal-box p{ font-size:1.15rem; max-width:none;}
+  .modal-close{ position:absolute; top:14px; right:18px; font-size:1.3rem; color:var(--text-faint);}
+
+  /* ---------- section 6 & 8 minimal quote ---------- */
+  .quiet-quote p{ font-size:clamp(1.1rem, 3vw, 1.5rem); max-width:460px;}
+
+  /* ---------- section 7 night sky ---------- */
+  #section7{
+    background:radial-gradient(ellipse at 50% 20%, rgba(90,42,134,.35), transparent 60%);
+  }
+  #section7 .prayer-line{
+    font-size:clamp(1rem, 2.6vw, 1.25rem); max-width:440px; margin:0 auto 6px;
+    opacity:0; transform:translateY(10px); transition:opacity 1s ease, transform 1s ease;
+  }
+  #section7 .prayer-line.visible{ opacity:1; transform:translateY(0);}
+
+  /* ---------- section 8 ---------- */
+  #section8 h2{ font-size:clamp(2.2rem, 8vw, 3.4rem); margin-bottom:26px; color:var(--accent);}
+
+  /* ---------- section 9 minimal finale ---------- */
+  #section9{ min-height:100vh;}
+  .finale-line{
+    font-size:clamp(1.2rem, 3.4vw, 1.7rem); max-width:460px; margin:0 auto;
+    opacity:0; transition:opacity 1.4s ease;
+    position:absolute;
+  }
+  .finale-line.show{ opacity:1;}
+  #finale-stage{ position:relative; height:160px; width:100%; display:flex; align-items:center; justify-content:center;}
+
+  /* ---------- ending ---------- */
+  #ending{
+    background:var(--bg-void);
+  }
+  #ending-heart{
+    font-size:2.4rem; color:var(--accent); transition:transform 2.4s ease, opacity 2.4s ease;
+  }
+  #ending-heart.shrink{ transform:scale(.15); opacity:.5;}
+  #ending .ending-text{
+    margin-top:26px; opacity:0; transform:translateY(12px);
+    transition:opacity 1.2s ease, transform 1.2s ease;
+  }
+  #ending .ending-text.visible{ opacity:1; transform:translateY(0);}
+  #replay-btn{
+    margin-top:40px; font-size:.85rem; color:var(--text-soft);
+    border:1px solid rgba(230,168,196,.3); padding:10px 26px; border-radius:30px;
+    opacity:0; transition:opacity 1.2s ease, border-color .3s ease, color .3s ease;
+  }
+  #replay-btn.visible{ opacity:1;}
+  #replay-btn:hover{ border-color:var(--accent); color:var(--accent);}
+
+  @media (max-width:420px){
+    section{ padding:10vh 6vw;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-screen"><div class="beating-heart"></div><p>sebentar ya...</p></div>
+
+<div id="progress-bar"></div>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+<div class="glow glow-3"></div>
+
+<div id="stars-layer"></div>
+<div id="petals-layer"></div>
+<div id="hearts-layer"></div>
+
+<div id="music-player" class="hidden-player">
+  <button id="play-pause-btn" aria-label="Putar musik">▶</button>
+  <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="Volume">
+  <button id="mute-btn" aria-label="Bisukan musik">🔊</button>
+  <!-- Ganti "musik.mp3" dengan file musikmu sendiri agar pemutar ini muncul -->
+  <audio id="bg-audio" loop preload="none" src="musik.mp3"></audio>
+</div>
+
+<section id="opening">
+  <div id="opening-roses"></div>
+  <h1 class="reveal visible">Untuk kamu,<br>yang pernah menjadi rumah<br>paling nyaman buat aku.</h1>
+  <button id="open-btn">Buka surat terakhirku 🤍</button>
+</section>
+
+<section id="section1" class="letter-section">
+  <p id="type-target" data-full="Aku sebenarnya masih sayang.
+Masih peduli.
+Masih sering kepikiran kamu,
+bahkan ketika aku mencoba terlihat baik-baik saja.
+
+Aku nggak akan bohong,
+kehilangan kamu bukan sesuatu yang mudah buat aku.
+
+Ada banyak hal yang ingin aku pertahankan.
+Ada banyak cerita yang sebenarnya masih ingin aku lanjutkan.
+
+Tapi mungkin,
+nggak semua yang kita sayangi
+ditakdirkan untuk tetap tinggal."></p>
+</section>
+
+<section id="section2" class="letter-section">
+  <p class="reveal">Kalau boleh jujur,
+aku masih ingin kamu.
+
+Aku masih ingin ngobrol sama kamu.
+Masih ingin ketawa bareng.
+Masih ingin menjadi orang yang kamu cari ketika kamu sedang lelah.
+
+Tapi aku juga sadar,
+cinta bukan tentang memiliki seseorang dengan paksa.
+
+Kalau bahagiamu ternyata bukan lagi bersamaku,
+aku harus belajar menerima itu.</p>
+</section>
+
+<section id="section3">
+  <div class="envelope reveal">
+    <p>Kalau suatu hari nanti
+kamu benar-benar memilih untuk menikah dengannya...
+
+jujur,
+mungkin aku akan sangat hancur.
+
+Mungkin akan ada bagian dari diriku
+yang masih berharap kamu berubah pikiran.
+
+Tapi aku tidak ingin mengganggu kebahagiaanmu.
+
+Aku tidak ingin menjadi alasan
+kamu merasa bersalah.
+
+Kalau memang dia adalah orang
+yang kamu pilih untuk menemani hidupmu,
+aku akan mencoba menghargai keputusan itu.</p>
+  </div>
+</section>
+
+<section id="section5">
+  <div class="whisper-grid">
+    <button class="whisper-card reveal" data-whisper="0">"Aku takut kehilangan kamu."</button>
+    <button class="whisper-card reveal" data-whisper="1">"Aku sebenarnya masih berharap."</button>
+    <button class="whisper-card reveal" data-whisper="2">"Aku masih menyimpan banyak kenangan tentang kita."</button>
+    <button class="whisper-card reveal" data-whisper="3">"Aku sering terlihat kuat, padahal tidak."</button>
+    <button class="whisper-card reveal" data-whisper="4">"Aku sayang kamu, bahkan ketika aku tahu mungkin aku harus melepaskanmu."</button>
+  </div>
+</section>
+
+<section id="section6" class="quiet-quote">
+  <p class="reveal">Aku tidak membencimu.
+
+Aku hanya sedang belajar
+menerima kenyataan
+bahwa orang yang paling aku sayangi
+mungkin akan menjalani hidup
+tanpa aku di dalamnya.
+
+Dan mungkin,
+mencintai seseorang untuk terakhir kalinya
+berarti membiarkannya bahagia
+meskipun kebahagiaan itu
+bukan bersamaku.</p>
+</section>
+
+<section id="section7">
+  <p class="prayer-line" data-order="0">Semoga kamu bahagia.</p>
+  <p class="prayer-line" data-order="1">Semoga orang yang kamu pilih benar-benar menjagamu.</p>
+  <p class="prayer-line" data-order="2">Semoga dia tidak membuatmu merasa sendirian.</p>
+  <p class="prayer-line" data-order="3">Semoga dia selalu mendengarkan ceritamu.</p>
+  <p class="prayer-line" data-order="4">Semoga dia menghargai hal-hal kecil tentangmu yang dulu sangat aku sukai.</p>
+  <p class="prayer-line" data-order="5">Dan kalau nanti kamu benar-benar menikah...</p>
+  <p class="prayer-line" data-order="6">semoga hari itu menjadi salah satu hari paling bahagia dalam hidupmu.</p>
+</section>
+
+<section id="section8">
+  <h2 class="reveal">Terima kasih.</h2>
+  <p class="reveal">Terima kasih karena pernah hadir.
+
+Terima kasih untuk semua tawa,
+semua cerita,
+semua perhatian,
+semua pertengkaran,
+dan semua kenangan yang pernah kita buat.
+
+Mungkin hubungan kita tidak berakhir
+seperti yang dulu aku bayangkan.
+
+Tapi aku tetap bersyukur
+pernah mengenalmu.</p>
+</section>
+
+<section id="section9">
+  <div id="finale-stage">
+    <p class="finale-line" data-order="0">Aku masih sayang.</p>
+    <p class="finale-line" data-order="1">Dan mungkin, sebagian dari diriku akan selalu menyayangimu.</p>
+    <p class="finale-line" data-order="2">Tapi kali ini...<br>aku akan belajar melepaskan.</p>
+    <p class="finale-line" data-order="3">Selamat menjalani hidupmu.<br>Semoga kamu selalu bahagia.</p>
+    <p class="finale-line" data-order="4">— dari seseorang<br>yang pernah sangat mencintaimu.</p>
+  </div>
+</section>
+
+<section id="ending">
+  <div id="ending-heart">🤍</div>
+  <p class="ending-text">Tidak semua cinta harus berakhir dengan memiliki.</p>
+  <p class="ending-text">Terima kasih sudah pernah menjadi bagian dari hidupku. 🤍</p>
+  <button id="replay-btn">Putar kembali dari awal</button>
+</section>
+
+<div class="modal" id="whisper-modal">
+  <div class="modal-box">
+    <button class="modal-close" aria-label="Tutup">✕</button>
+    <p id="whisper-modal-text"></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- loading screen ---------- */
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      document.getElementById('loading-screen').classList.add('hide');
+    }, 900);
+  });
+
+  /* ---------- progress bar ---------- */
+  var progressBar = document.getElementById('progress-bar');
+  function updateProgress(){
+    var h = document.documentElement;
+    var scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    progressBar.style.width = (isFinite(scrolled) ? scrolled : 0) + '%';
+  }
+  document.addEventListener('scroll', updateProgress, {passive:true});
+  updateProgress();
+
+  /* ---------- reveal on scroll ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  var revealObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.3});
+  revealEls.forEach(function(el){ revealObserver.observe(el); });
+
+  /* ---------- envelope (section 3) ---------- */
+  var envelope = document.querySelector('#section3 .envelope');
+  var envObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){ entry.target.classList.add('visible'); envObserver.unobserve(entry.target); }
+    });
+  }, {threshold:0.35});
+  if(envelope) envObserver.observe(envelope);
+
+  /* ---------- typing effect (section 1) ---------- */
+  var typeTarget = document.getElementById('type-target');
+  var typedOnce = false;
+  var typeObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && !typedOnce){
+        typedOnce = true;
+        var full = typeTarget.getAttribute('data-full');
+        if(reduceMotion){ typeTarget.textContent = full; return; }
+        var i = 0;
+        var caret = document.createElement('span');
+        caret.className = 'typing-caret';
+        function step(){
+          if(i <= full.length){
+            typeTarget.textContent = full.slice(0, i);
+            typeTarget.appendChild(caret);
+            i++;
+            setTimeout(step, 28);
+          } else {
+            caret.remove();
+          }
+        }
+        step();
+        typeObserver.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.4});
+  if(typeTarget) typeObserver.observe(typeTarget);
+
+  /* ---------- floating hearts on section 2 ---------- */
+  var heartsLayer = document.getElementById('hearts-layer');
+  var heartsInterval = null;
+  function spawnHeart(){
+    var h = document.createElement('div');
+    h.className = 'tiny-heart';
+    h.textContent = '♥';
+    h.style.left = (Math.random()*90 + 3) + 'vw';
+    h.style.animationDuration = (5 + Math.random()*3) + 's';
+    heartsLayer.appendChild(h);
+    setTimeout(function(){ h.remove(); }, 9000);
+  }
+  var section2 = document.getElementById('section2');
+  var heartObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && !reduceMotion){
+        if(!heartsInterval){
+          spawnHeart();
+          heartsInterval = setInterval(spawnHeart, 1300);
+        }
+      } else if(heartsInterval){
+        clearInterval(heartsInterval);
+        heartsInterval = null;
+      }
+    });
+  }, {threshold:0.2});
+  if(section2) heartObserver.observe(section2);
+
+  /* ---------- stars (persistent, subtle) ---------- */
+  var starsLayer = document.getElementById('stars-layer');
+  var starCount = window.innerWidth < 500 ? 40 : 70;
+  for(var s = 0; s < starCount; s++){
+    var star = document.createElement('div');
+    star.className = 'star';
+    star.style.top = Math.random()*100 + 'vh';
+    star.style.left = Math.random()*100 + 'vw';
+    star.style.animationDelay = (Math.random()*3.5) + 's';
+    starsLayer.appendChild(star);
+  }
+
+  /* ---------- bunga rose besar berjatuhan saat pembukaan ---------- */
+  var openingRoses = document.getElementById('opening-roses');
+  if(openingRoses){
+    var roseCount = window.innerWidth < 500 ? 14 : 22;
+    for(var r = 0; r < roseCount; r++){
+      (function(delay){
+        setTimeout(function(){
+          var rose = document.createElement('div');
+          rose.className = 'big-rose';
+          rose.textContent = '🌹';
+          rose.style.left = Math.random()*100 + 'vw';
+          rose.style.fontSize = (26 + Math.random()*30) + 'px';
+          rose.style.setProperty('--drift', (Math.random()*140 - 70) + 'px');
+          rose.style.animationDuration = reduceMotion ? '0.01ms' : (3 + Math.random()*2.5) + 's';
+          openingRoses.appendChild(rose);
+          setTimeout(function(){ rose.remove(); }, 6500);
+        }, reduceMotion ? 0 : delay);
+      })(r * 140);
+    }
+  }
+
+  /* ---------- falling petals (gentle, throttled) ---------- */
+  var petalsLayer = document.getElementById('petals-layer');
+  if(!reduceMotion){
+    setInterval(function(){
+      var petal = document.createElement('div');
+      petal.className = 'petal';
+      petal.textContent = '❀';
+      petal.style.left = Math.random()*100 + 'vw';
+      petal.style.setProperty('--drift', (Math.random()*80 - 40) + 'px');
+      petal.style.animationDuration = (9 + Math.random()*6) + 's';
+      petalsLayer.appendChild(petal);
+      setTimeout(function(){ petal.remove(); }, 16000);
+    }, 2200);
+  }
+
+  /* ---------- open letter button: smooth scroll to section1 ---------- */
+  document.getElementById('open-btn').addEventListener('click', function(){
+    document.getElementById('section1').scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth'});
+  });
+
+  /* ---------- music player ---------- */
+  var audio = document.getElementById('bg-audio');
+  var player = document.getElementById('music-player');
+  var playPauseBtn = document.getElementById('play-pause-btn');
+  var muteBtn = document.getElementById('mute-btn');
+  var volumeSlider = document.getElementById('volume-slider');
+  var musicAvailable = true;
+
+  audio.volume = 0.5;
+  audio.addEventListener('error', function(){
+    musicAvailable = false;
+    player.classList.add('hidden-player');
+  });
+  audio.addEventListener('canplay', function(){
+    musicAvailable = true;
+    player.classList.remove('hidden-player');
+  });
+  // Sembunyikan dulu sampai kita tahu file musiknya benar-benar ada
+  player.classList.add('hidden-player');
+
+  playPauseBtn.addEventListener('click', function(){
+    if(!musicAvailable) return;
+    if(audio.paused){
+      audio.play().then(function(){
+        playPauseBtn.textContent = '❚❚';
+      }).catch(function(){ /* diam saja jika browser memblokir autoplay */ });
+    } else {
+      audio.pause();
+      playPauseBtn.textContent = '▶';
+    }
+  });
+  volumeSlider.addEventListener('input', function(){
+    audio.volume = parseFloat(volumeSlider.value);
+    if(audio.volume > 0){ audio.muted = false; muteBtn.textContent = '🔊'; }
+  });
+  muteBtn.addEventListener('click', function(){
+    audio.muted = !audio.muted;
+    muteBtn.textContent = audio.muted ? '🔇' : '🔊';
+  });
+
+  /* ---------- musik langsung main begitu ada sentuhan/klik pertama di mana saja ---------- */
+  var musicStarted = false;
+  function startMusicOnFirstInteraction(){
+    if(musicStarted) return;
+    audio.play().then(function(){
+      musicStarted = true;
+      playPauseBtn.textContent = '❚❚';
+      player.classList.remove('hidden-player');
+      document.removeEventListener('click', startMusicOnFirstInteraction);
+      document.removeEventListener('touchstart', startMusicOnFirstInteraction);
+      document.removeEventListener('keydown', startMusicOnFirstInteraction);
+    }).catch(function(){ /* browser masih memblokir, akan dicoba lagi di sentuhan berikutnya */ });
+  }
+  document.addEventListener('click', startMusicOnFirstInteraction);
+  document.addEventListener('touchstart', startMusicOnFirstInteraction, {passive:true});
+  document.addEventListener('keydown', startMusicOnFirstInteraction);
+
+  /* ---------- whisper cards modal ---------- */
+  var whispers = [
+    "Aku takut kehilangan kamu — takut satu hari nanti namamu cuma jadi kenangan yang aku simpan sendirian, sementara kamu sudah melangkah jauh ke arah lain.",
+    "Aku sebenarnya masih berharap. Diam-diam, di sela-sela hari yang aku coba isi dengan hal lain, masih ada bagian kecil dari aku yang menunggu.",
+    "Aku masih menyimpan banyak kenangan tentang kita — hal-hal kecil yang mungkin kamu sudah lupa, tapi buat aku masih terasa seperti kemarin.",
+    "Aku sering terlihat kuat, padahal tidak. Aku cuma belajar tersenyum di waktu yang tepat, supaya orang lain tidak perlu ikut khawatir.",
+    "Aku sayang kamu, bahkan ketika aku tahu mungkin aku harus melepaskanmu. Karena kadang, mencintai berarti berani membiarkan pergi."
+  ];
+  var whisperModal = document.getElementById('whisper-modal');
+  var whisperText = document.getElementById('whisper-modal-text');
+  document.querySelectorAll('.whisper-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      var idx = parseInt(card.getAttribute('data-whisper'), 10);
+      whisperText.textContent = whispers[idx];
+      whisperModal.classList.add('open');
+    });
+  });
+  function closeWhisper(){ whisperModal.classList.remove('open'); }
+  whisperModal.querySelector('.modal-close').addEventListener('click', closeWhisper);
+  whisperModal.addEventListener('click', function(e){ if(e.target === whisperModal) closeWhisper(); });
+
+  /* ---------- section 7 prayer lines, sequential reveal ---------- */
+  var prayerDone = false;
+  var prayerObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && !prayerDone){
+        prayerDone = true;
+        var lines = document.querySelectorAll('#section7 .prayer-line');
+        lines.forEach(function(line, i){
+          setTimeout(function(){ line.classList.add('visible'); }, i * 900);
+        });
+      }
+    });
+  }, {threshold:0.3});
+  var section7 = document.getElementById('section7');
+  if(section7) prayerObserver.observe(section7);
+
+  /* ---------- section 9 finale sequence ---------- */
+  var finaleDone = false;
+  var finaleObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && !finaleDone){
+        finaleDone = true;
+        var lines = document.querySelectorAll('.finale-line');
+        var i = 0;
+        function nextLine(){
+          lines.forEach(function(l){ l.classList.remove('show'); });
+          if(i < lines.length){
+            lines[i].classList.add('show');
+            i++;
+            setTimeout(nextLine, 2600);
+          }
+        }
+        nextLine();
+      }
+    });
+  }, {threshold:0.4});
+  var section9 = document.getElementById('section9');
+  if(section9) finaleObserver.observe(section9);
+
+  /* ---------- ending sequence ---------- */
+  var endingDone = false;
+  var endingObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && !endingDone){
+        endingDone = true;
+        var heart = document.getElementById('ending-heart');
+        var texts = document.querySelectorAll('#ending .ending-text');
+        var replay = document.getElementById('replay-btn');
+        setTimeout(function(){ heart.classList.add('shrink'); }, 400);
+        texts.forEach(function(t, i){
+          setTimeout(function(){ t.classList.add('visible'); }, 1400 + i * 1300);
+        });
+        setTimeout(function(){ replay.classList.add('visible'); }, 1400 + texts.length * 1300 + 400);
+      }
+    });
+  }, {threshold:0.5});
+  var ending = document.getElementById('ending');
+  if(ending) endingObserver.observe(ending);
+
+  document.getElementById('replay-btn').addEventListener('click', function(){
+    window.scrollTo({top:0, behavior: reduceMotion ? 'auto' : 'smooth'});
+  });
+
+})();
+</script>
+</body>
+</html>
